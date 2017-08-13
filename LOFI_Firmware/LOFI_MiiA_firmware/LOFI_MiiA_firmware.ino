@@ -2,6 +2,19 @@
 // USB + Bluetooth version
 // Author: Maciej Wojnicki
 // WWW.LOFIROBOT.COM
+/*
+ * Lofi firmware developed for MiiA bot. 
+ * Version vA0
+ * Date: 12/08/2017
+ * Instruction: 
+ * Connect your Ardiuno using the usb cable. 
+ * Set the board to the arduino board.go to:
+ * tools -> board -> arduino Nano
+ * Connect port:
+ *tools -> port -> choose port board is connected to
+ * click the upload button(use the second button from the left above)
+ */
+
 
 #include <Servo.h>
 
@@ -13,8 +26,8 @@ int analog1 = 0;
 int analog2 = 0;
 int analog3 = 0;
 int analog4 = 0;
-int trigPin = 14;
-int echoPin = 15;
+int trigPin = 2;
+int echoPin = 3;
 int dist;
 int current_byte = 0;
 int prev_byte = 0;
@@ -30,24 +43,24 @@ Servo serwo4;
 
 void setup() {
   //Serial.begin(57600);
-  //Serial1.begin(57600);
+  //Serial1.begin(57600);  
+  //pinMode(2,OUTPUT);
+  //pinMode(3,OUTPUT);
+  
   Serial.begin(9600);
   Serial1.begin(9600);
-  pinMode(2,OUTPUT);
-  pinMode(4,OUTPUT);
-  pinMode(3,OUTPUT);
   
+  pinMode(4,OUTPUT);  
   pinMode(7,OUTPUT);
   pinMode(8,OUTPUT);
   pinMode(5,OUTPUT);
   
   pinMode(10,OUTPUT);
   pinMode(9,OUTPUT);
-  pinMode(6,OUTPUT);
-  
+  pinMode(6,OUTPUT);  
   pinMode(16,OUTPUT);
 
-    pinMode(trigPin, OUTPUT);
+  pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
 }
@@ -252,26 +265,26 @@ void sending() {
 }
 
 void servo1(int position) {
-serwo1.attach(10);
+serwo1.attach(11);
 serwo1.write(position);
 //delay(5);
 //serwo.detach();
 }
 
 void servo2(int position) {
-serwo2.attach(9);
+serwo2.attach(10);
 serwo2.write(position);
 //delay(5);
 //serwo.detach();
 }
 void servo3(int position) {
-serwo3.attach(6);
+serwo3.attach(9);
 serwo3.write(position);
 //delay(5);
 //serwo.detach();
 }
 void servo4(int position) {
-serwo4.attach(5);
+serwo4.attach(8);
 serwo4.write(position);
 //delay(5);
 //serwo.detach();
