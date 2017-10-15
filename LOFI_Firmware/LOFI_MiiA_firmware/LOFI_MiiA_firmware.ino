@@ -17,6 +17,7 @@
 
 
 #include <Servo.h>
+void calibrate(Servo, int );
 
 //data sending (arduino->computer) interval  
 //raise it if you encouter communication jitter
@@ -35,7 +36,7 @@ int prev_byte = 0;
 unsigned long previousMillis = 0;
 unsigned long currentMillis;
 
-
+Servo serwo_calibrate;
 Servo serwo1;
 Servo serwo2;
 Servo serwo3;
@@ -49,6 +50,11 @@ void setup() {
   
   Serial.begin(9600);
   Serial1.begin(9600);
+  
+  // pin for servo calibration
+  pinMode(A0, OUTPUT);
+  serwo_calibrate.attach(A0);
+  calibrate(serwo_calibrate, 90);
   
   pinMode(4,OUTPUT);  
   pinMode(7,OUTPUT);
@@ -266,26 +272,46 @@ void sending() {
 
 void servo1(int position) {
 serwo1.attach(11);
-serwo1.write(position);
+if (position < 15){
+	serwo1.write(15);
+}
+else{
+	serwo1.write(position);
+}
 //delay(5);
 //serwo.detach();
 }
 
 void servo2(int position) {
 serwo2.attach(10);
-serwo2.write(position);
+if (position < 15){
+	serwo2.write(15);
+}
+else{
+	serwo2.write(position);
+}
 //delay(5);
 //serwo.detach();
 }
 void servo3(int position) {
 serwo3.attach(9);
-serwo3.write(position);
+if (position < 15){
+	serwo3.write(15);
+}
+else{
+	serwo3.write(position);
+}
 //delay(5);
 //serwo.detach();
 }
 void servo4(int position) {
 serwo4.attach(8);
-serwo4.write(position);
+if (position < 15){
+	serwo4.write(15);
+}
+else{
+	serwo4.write(position);
+}
 //delay(5);
 //serwo.detach();
 }
@@ -295,4 +321,10 @@ serwo1.detach();
 serwo2.detach();
 serwo3.detach();
 serwo4.detach();
+}
+
+void calibrate(Servo myservo, int pos)
+{
+  myservo.write(pos);
+  delay(15);
 }
