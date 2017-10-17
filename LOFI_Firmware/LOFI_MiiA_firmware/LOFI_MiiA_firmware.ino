@@ -2,240 +2,170 @@
 // USB + Bluetooth version
 // Author: Maciej Wojnicki
 // WWW.LOFIROBOT.COM
+
 /*
  * Lofi firmware developed for MiiA bot. 
- * Version vA0
- * Date: 12/08/2017
- * Instruction: 
- * Connect your Ardiuno using the usb cable. 
- * Set the board to the arduino board.go to:
+ * Version v1.2
+ * Date: 17/10/2017
+ * Instructions: 
+ * Connect your Arduino using the usb cable. 
+ * Set the board to the arduino board, in the arduino ide go to:
  * tools -> board -> arduino Nano
  * Connect port:
- *tools -> port -> choose port board is connected to
- * click the upload button(use the second button from the left above)
+ * tools -> port -> choose port board is connected to
+ * click the upload button(use the second button from the left above, arrow pointing right)
+ * ******************************************************************
+ * Electronic Connections:
+ * ******************************************************************
+ * While facing the front of MiiA:
+ * 
+ * Left Hip Servo - 8
+ * Right Hip Servo - 9
+ * Left Foot Servo - 10
+ * Right Foot Servo - 11
+ * UltraSonic Sensor TrigPin - 2
+ * UltraSonic Sensor EchoPin - 2
+ * Bluetooth Module TX - 0 (RX)
+ * Bluetooth Module RX - 1 (TX)
+ * Servo to Calibrate - A0
  */
 
-
+// included libraries
 #include <Servo.h>
-void calibrate(Servo, int );
+
+// function prototypes
+void set_servo_position(Servo my_servo, int pin, int pos);
+void calibrate(Servo my_servo, int pos);
+void servo_off(Servo my_servo);
+void configure_pins();
+
+// pin assignments
+#define left_hip_servo_pin 8
+#define right_hip_servo_pin 9
+#define left_foot_servo_pin 10
+#define right_foot_servo_pin 11
+#define servo_calibration_pin A0
+#define uss_trigger_pin 2
+#define uss_echo_pin 3
+
+// constants
+#define baud_rate 57600 // nb baud rate must be 57600 for LoFi Blocks
+#define servo_calibration_pos 90
+
+// create servo objects
+Servo servo_calibrate;
+Servo servo_left_hip;
+Servo servo_right_hip;
+Servo servo_left_foot;
+Servo servo_right_foot;
 
 //data sending (arduino->computer) interval  
 //raise it if you encouter communication jitter
 const long interval = 100;
 
-int analog1 = 0;
-int analog2 = 0;
-int analog3 = 0;
-int analog4 = 0;
-int trigPin = 2;
-int echoPin = 3;
-int dist;
 int current_byte = 0;
 int prev_byte = 0;
+int analog1 = 1;
+int analog2 = 2;
+int analog3 = 3;
+int analog4 = 4;
 
 unsigned long previousMillis = 0;
 unsigned long currentMillis;
 
-Servo serwo_calibrate;
-Servo serwo1;
-Servo serwo2;
-Servo serwo3;
-Servo serwo4;
+void setup() 
+{
+  // initialize serial communications at specified baud rate
+  Serial.begin(baud_rate);
 
-void setup() {
-  //Serial.begin(57600);
-  //Serial1.begin(57600);  
-  //pinMode(2,OUTPUT);
-  //pinMode(3,OUTPUT);
-  
-  Serial.begin(9600);
-  Serial1.begin(9600);
-  
-  // pin for servo calibration
-  pinMode(A0, OUTPUT);
-  serwo_calibrate.attach(A0);
-  calibrate(serwo_calibrate, 90);
-  
-  pinMode(4,OUTPUT);  
-  pinMode(7,OUTPUT);
-  pinMode(8,OUTPUT);
-  pinMode(5,OUTPUT);
-  
-  pinMode(10,OUTPUT);
-  pinMode(9,OUTPUT);
-  pinMode(6,OUTPUT);  
-  pinMode(16,OUTPUT);
+  // configure all pin modes
+  configure_pins();
 
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  // set calibration pin and drive pin to calibrated position
+  servo_calibrate.attach(servo_calibration_pin);
+  calibrate(servo_calibrate, servo_calibration_pos);
 
+  // setup complete
 }
 
-void loop() {
-
-currentMillis = millis();
+void loop() 
+{
+  currentMillis = millis();
 
   //receiving data from ScratchX Chrome plugin
   receiving();
 
   // timer delay reduce data bandwidth
-  if (currentMillis - previousMillis >= interval) {
+  if (currentMillis - previousMillis >= interval) 
+  {
     
     previousMillis = currentMillis;
 
     //sending data to ScratchX Chrome plugin
     sending();
-    //digitalWrite(16,HIGH);
-    //delay(10);
   }
-//digitalWrite(16,LOW);
 }
 
-
-
-void odleglosc() {
+long odleglosc() 
+{
   
   long duration, distance;
-  digitalWrite(trigPin, LOW);  // Added this line
-  delayMicroseconds(2); // Added this line
-  digitalWrite(trigPin, HIGH);
-
-  delayMicroseconds(5); // Added this line
-  digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH, 5000);
-  distance = (duration/2) / 29.1;
-
-  //Serial.print(distance);
-  //Serial.println(" cm");
-  
-  //delay(20);
-  
-  dist = distance;
+  digitalWrite(uss_trigger_pin, LOW); 
+  delayMicroseconds(2); 
+  digitalWrite(uss_trigger_pin, HIGH);
+  delayMicroseconds(10); 
+  digitalWrite(uss_trigger_pin, LOW);
+  duration = pulseIn(uss_echo_pin, HIGH);
+  distance = (duration/2)/29.1;
+  return distance;  
 }
 
-void receiving() {
-
-  // 201 - buzzer
-  // 202 - motor1
-  // 203 - motor2
-
-  if (Serial.available() > 0) {
-  current_byte = Serial.read();
-   //Serial.print(recieved);
-  
-//buzzer
-  if (prev_byte == 201) {
-      digitalWrite(16,current_byte);
-  }
+void receiving() 
+{
+  if (Serial.available() > 0) 
+  {
+  current_byte = Serial.read();    
   outputs_set();
   prev_byte = current_byte;
-
-  }
-
-  //bluetooth
-  if (Serial1.available() > 0) {
-  current_byte = Serial1.read();
-   //Serial.print(recieved);
-  
-//buzzer
-  if (prev_byte == 201) {
-      digitalWrite(16,current_byte);
-  }
-  outputs_set();
-  prev_byte = current_byte;
-  }
-
-
-  
+  } 
 }
 
-
-void outputs_set() {
-
-//motor1
-  if (prev_byte == 202) {
-
-    if (current_byte <= 100) {
-      digitalWrite(2,HIGH);
-      digitalWrite(4,LOW);
-      analogWrite(3,current_byte*2.35);
-    }
-    
-    if (current_byte > 100) {
-      digitalWrite(4,HIGH);
-      digitalWrite(2,LOW);
-      analogWrite(3,(current_byte-100)*2.35);
-    }
-    
-  }
-
-//motor2
-  if (prev_byte == 203) {
-
-    if (current_byte <= 100) {
-      digitalWrite(7,HIGH);
-      digitalWrite(8,LOW);
-      analogWrite(5,current_byte*2.35);
-    }
-    
-    if (current_byte > 100) {
-      digitalWrite(8,HIGH);
-      digitalWrite(7,LOW);
-      analogWrite(5,(current_byte-100)*2.35);
-    }
-    
-  }
-
-  //output1
-  if (prev_byte == 204) {
-      analogWrite(10,current_byte*2.55);
-  }
-  //output2
-    if (prev_byte == 205) {
-      analogWrite(9,current_byte*2.55);
-  }
-  //output3
-    if (prev_byte == 206) {
-      analogWrite(6,current_byte*2.55);
-  }
-  //output4
-    if (prev_byte == 207) {
-      analogWrite(5,current_byte*2.55);
-  }
-
+void outputs_set() 
+{
     //servo output1
-    if (prev_byte == 208) {
-      servo1(current_byte);
-  }
+    if (prev_byte == 208) 
+    {
+      set_servo_position(servo_left_hip, left_hip_servo_pin, current_byte);      
+    }
       //servo output2
-    if (prev_byte == 209) {
-      servo2(current_byte);
-  }
+    if (prev_byte == 209) 
+    {
+      set_servo_position(servo_right_hip, right_hip_servo_pin, current_byte);
+    }
       //servo output3
-    if (prev_byte == 210) {
-      servo3(current_byte);
-  }
+    if (prev_byte == 210) 
+    {
+      set_servo_position(servo_left_foot, left_foot_servo_pin, current_byte);
+    }
       //servo output4
-    if (prev_byte == 211) {
-      servo4(current_byte);
-  }
+    if (prev_byte == 211) 
+    {
+      set_servo_position(servo_right_foot, right_foot_servo_pin, current_byte);
+    }
 
-  if (prev_byte == 212 && current_byte == 99) {
-      servo_off();
-  }
-  
-
-
+    if (prev_byte == 212 && current_byte == 99) 
+    {
+      // detach all servos
+      servo_off(servo_left_hip);
+      servo_off(servo_right_hip);
+      servo_off(servo_left_foot);
+      servo_off(servo_right_foot);      
+    }
 }
 
 void sending() {
 
-  analog1 = analogRead(0)/10.23;
-  analog2 = analogRead(1)/10.23;
-  analog3 = analogRead(2)/10.23;
-  analog4 = analogRead(3)/10.23;
-  
-//[224, 115, 2, 225, 102, 4, 226, 107, 5, 227, 63, 6]
+  // even if not using analog inputs, LoFi requires this.
   Serial.write(224);
   Serial.write(byte(analog1));
   Serial.write(225);
@@ -244,87 +174,56 @@ void sending() {
   Serial.write(byte(analog3));
   Serial.write(227);
   Serial.write(byte(analog4));
-
-  odleglosc();
-
   Serial.write(240);
-  Serial.write(byte(dist));
 
-  //bluetooth
-  Serial1.write(224);
-  Serial1.write(byte(analog1));
-  Serial1.write(225);
-  Serial1.write(byte(analog2));
-  Serial1.write(226);
-  Serial1.write(byte(analog3));
-  Serial1.write(227);
-  Serial1.write(byte(analog4));
-
-  odleglosc();
-
-  Serial1.write(240);
-  Serial1.write(byte(dist));
+  // ultra sonic sensor output
+  Serial.write(byte(odleglosc()));   
   // last byte "i" character as a delimiter for BT2.0 on Android
-  Serial1.write(105);
-
-
+  Serial.write(105);  
 }
 
-void servo1(int position) {
-serwo1.attach(11);
-if (position < 15){
-	serwo1.write(15);
-}
-else{
-	serwo1.write(position);
-}
-//delay(5);
-//serwo.detach();
-}
-
-void servo2(int position) {
-serwo2.attach(10);
-if (position < 15){
-	serwo2.write(15);
-}
-else{
-	serwo2.write(position);
-}
-//delay(5);
-//serwo.detach();
-}
-void servo3(int position) {
-serwo3.attach(9);
-if (position < 15){
-	serwo3.write(15);
-}
-else{
-	serwo3.write(position);
-}
-//delay(5);
-//serwo.detach();
-}
-void servo4(int position) {
-serwo4.attach(8);
-if (position < 15){
-	serwo4.write(15);
-}
-else{
-	serwo4.write(position);
-}
-//delay(5);
-//serwo.detach();
-}
-
-void servo_off() {
-serwo1.detach();
-serwo2.detach();
-serwo3.detach();
-serwo4.detach();
-}
-
-void calibrate(Servo myservo, int pos)
+// function to configure pins and pin modes
+void configure_pins()
 {
-  myservo.write(pos);
+  // servo calibration pin
+  pinMode(servo_calibration_pin, OUTPUT);
+  
+  // miia servo motor signal pins
+  pinMode(left_hip_servo_pin, OUTPUT);  
+  pinMode(right_hip_servo_pin, OUTPUT);
+  pinMode(left_foot_servo_pin, OUTPUT);
+  pinMode(right_foot_servo_pin, OUTPUT);
+
+  // ultrasonic sensor trigger and echo pins
+  pinMode(uss_trigger_pin, OUTPUT);
+  pinMode(uss_echo_pin, INPUT);
+}
+
+// function to turn off, and detach, all a servo
+void servo_off(Servo my_servo) 
+{
+  my_servo.detach();
+}
+
+// function to calibrate servo motors to predtermined position
+void calibrate(Servo my_servo, int pos)
+{
+  my_servo.write(pos);
   delay(15);
 }
+
+// function to set position of a servo motor
+void set_servo_position(Servo my_servo, int pin, int pos)
+{
+  my_servo.attach(pin);
+  if (pos < 15)
+  {
+    my_servo.write(15);
+  }
+  else
+  {
+    my_servo.write(pos);
+  }
+}
+
+//end
