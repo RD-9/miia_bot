@@ -24,7 +24,7 @@
  * Left Foot Servo - 10
  * Right Foot Servo - 11
  * UltraSonic Sensor TrigPin - 2
- * UltraSonic Sensor EchoPin - 2
+ * UltraSonic Sensor EchoPin - 3
  * Bluetooth Module TX - 0 (RX)
  * Bluetooth Module RX - 1 (TX)
  * Servo to Calibrate - A0
@@ -61,7 +61,7 @@ Servo servo_right_foot;
 
 //data sending (arduino->computer) interval  
 //raise it if you encouter communication jitter
-const long interval = 100;
+const long interval = 10000;
 
 int current_byte = 0;
 int prev_byte = 0;
