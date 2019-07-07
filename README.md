@@ -1,5 +1,5 @@
 # Welcome MiiA Coders
-Congratulations on obtaining your MiiA bot.These instructions will take you through everything you need to know on how MiiA bot is put together and what makes her tick. MiiA botis built in the form of a 3D puzzle, so the fun begins immediately. The MiiA design is based off of another great robot called Otto (https://www.ottodiy.com/).We have completly open sourced the MiiA bot design under the Creative Commons  license. So without further ado, let’s jump in!
+Congratulations on obtaining your MiiA bot.These instructions will take you through everything you need to know on how MiiA bot is put together and what makes her tick. MiiA botis built in the form of a 3D puzzle, so the fun begins immediately. The MiiA design is based off of another great robot called Otto (https://www.ottodiy.com). We have completly open sourced the MiiA bot design under the Creative Commons  license. So without further ado, let’s jump in!
 
 # Assembly
 The cad files along with the assembly instructions is found in the assembly folder. This is to help with putting MiiA bot's physical structure together. 
